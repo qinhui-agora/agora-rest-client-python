@@ -72,7 +72,7 @@ This creates:
 pip install dist/agora_rest_client_python-X.Y.Z-py3-none-any.whl
 
 # Test import
-python -c "from agora_rest import AgentClient, ConvoAIClient; from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig; print('Import successful!')"
+python -c "from agora_rest import ConvoAIClient; from agora_rest.agent import AgentClient, DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig, TokenBuilder; print('Import successful!')"
 
 # Run examples
 python examples/high_level_api/basic_usage.py

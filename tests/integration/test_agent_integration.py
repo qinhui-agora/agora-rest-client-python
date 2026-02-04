@@ -17,8 +17,13 @@ Skip with: pytest tests/ --ignore=tests/integration/
 import os
 import time
 import pytest
-from agora_rest import AgentClient
-from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
+from agora_rest.agent import (
+    AgentClient,
+    TokenBuilder,
+    DeepgramASRConfig,
+    OpenAILLMConfig,
+    ElevenLabsTTSConfig
+)
 
 
 # Skip all tests if credentials are not available
@@ -43,12 +48,6 @@ def client():
         customer_id=os.getenv("API_KEY"),
         customer_secret=os.getenv("API_SECRET")
     )
-
-
-@pytest.fixture
-def config_data(client):
-    """Generate connection configuration"""
-    return client.generate_config()
 
 
 @pytest.fixture
@@ -78,25 +77,20 @@ def tts_config():
 class TestAgentIntegration:
     """Integration tests for agent lifecycle"""
     
-    def test_generate_config(self, client):
-        """Test generating connection configuration"""
-        config = client.generate_config()
-        
-        assert "app_id" in config
-        assert "token" in config
-        assert "uid" in config
-        assert "channel_name" in config
-        assert "agent_uid" in config
-        assert len(config["token"]) > 0
-        assert config["channel_name"].startswith("channel_")
-    
-    def test_start_and_stop_agent(self, client, config_data, asr_config, llm_config, tts_config):
+    def test_start_and_stop_agent(self, client, asr_config, llm_config, tts_config):
         """Test complete agent lifecycle: start and stop"""
+        # Generate connection configuration
+        import uuid
+        import random
+        channel_name = f"channel_{uuid.uuid4().hex[:8]}"
+        user_uid = str(random.randint(100000, 999999))
+        agent_uid = str(random.randint(100000, 999999))
+        
         # Start agent
         result = client.start_agent(
-            channel_name=config_data['channel_name'],
-            agent_uid=config_data['agent_uid'],
-            user_uid=config_data['uid'],
+            channel_name=channel_name,
+            agent_uid=agent_uid,
+            user_uid=user_uid,
             asr_config=asr_config,
             llm_config=llm_config,
             tts_config=tts_config
@@ -104,7 +98,7 @@ class TestAgentIntegration:
         
         # Verify start result
         assert "agent_id" in result
-        assert result["channel_name"] == config_data['channel_name']
+        assert result["channel_name"] == channel_name
         assert result["status"] == "started"
         
         agent_id = result["agent_id"]
@@ -120,8 +114,15 @@ class TestAgentIntegration:
         except Exception as e:
             pytest.fail(f"Failed to stop agent: {e}")
     
-    def test_start_agent_with_custom_llm_config(self, client, config_data, asr_config, tts_config):
+    def test_start_agent_with_custom_llm_config(self, client, asr_config, tts_config):
         """Test starting agent with customized LLM configuration"""
+        # Generate connection configuration
+        import uuid
+        import random
+        channel_name = f"channel_{uuid.uuid4().hex[:8]}"
+        user_uid = str(random.randint(100000, 999999))
+        agent_uid = str(random.randint(100000, 999999))
+        
         # Custom LLM config
         llm = OpenAILLMConfig(
             api_key=os.getenv("LLM_API_KEY"),
@@ -133,9 +134,9 @@ class TestAgentIntegration:
         
         # Start agent
         result = client.start_agent(
-            channel_name=config_data['channel_name'],
-            agent_uid=config_data['agent_uid'],
-            user_uid=config_data['uid'],
+            channel_name=channel_name,
+            agent_uid=agent_uid,
+            user_uid=user_uid,
             asr_config=asr_config,
             llm_config=llm,
             tts_config=tts_config

@@ -71,46 +71,6 @@ class AgentClient:
             self._client = ConvoAIClient(client_config)
         return self._client
     
-    def generate_config(self) -> Dict[str, Any]:
-        """Generate connection configuration with token, channel, and UIDs"""
-        # Generate UIDs
-        user_uid = random.randint(1000, 9999999)
-        agent_uid = random.randint(10000000, 99999999)
-        
-        # Generate channel name
-        channel_name = f"channel_{int(time.time())}"
-        
-        # Generate token for user
-        token = TokenBuilder.generate(
-            app_id=self.app_id,
-            app_certificate=self.app_certificate,
-            channel_name=channel_name,
-            uid=str(user_uid)
-        )
-        
-        return {
-            "app_id": self.app_id,
-            "token": token,
-            "uid": str(user_uid),
-            "channel_name": channel_name,
-            "agent_uid": str(agent_uid)
-        }
-    
-    def generate_agent_token(
-        self,
-        channel_name: str,
-        agent_uid: str,
-        expire: int = 86400
-    ) -> str:
-        """Generate RTC token for agent"""
-        return TokenBuilder.generate(
-            app_id=self.app_id,
-            app_certificate=self.app_certificate,
-            channel_name=channel_name,
-            uid=agent_uid,
-            expire=expire
-        )
-    
     def build_agent_properties(
         self,
         channel: str,
@@ -182,7 +142,12 @@ class AgentClient:
         tts_dict = tts_config.to_dict() if hasattr(tts_config, 'to_dict') else tts_config
         
         # Generate Agent Token
-        agent_token = self.generate_agent_token(channel_name, agent_uid)
+        agent_token = TokenBuilder.generate(
+            app_id=self.app_id,
+            app_certificate=self.app_certificate,
+            channel_name=channel_name,
+            uid=agent_uid
+        )
         
         # Build Agent configuration
         properties = self.build_agent_properties(

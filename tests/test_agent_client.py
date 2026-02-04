@@ -5,8 +5,12 @@ These tests use mocks to avoid making real API calls.
 """
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from agora_rest import AgentClient
-from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
+from agora_rest.agent import (
+    AgentClient,
+    DeepgramASRConfig,
+    OpenAILLMConfig,
+    ElevenLabsTTSConfig
+)
 
 
 class TestAgentClient:
@@ -35,25 +39,6 @@ class TestAgentClient:
                 customer_id="test_customer_id",
                 customer_secret=""  # Missing
             )
-    
-    def test_generate_config(self):
-        """Test generate_config creates valid configuration"""
-        client = AgentClient(
-            app_id="test_app_id",
-            app_certificate="test_cert",
-            customer_id="test_customer_id",
-            customer_secret="test_secret"
-        )
-        
-        config = client.generate_config()
-        
-        assert "app_id" in config
-        assert "token" in config
-        assert "uid" in config
-        assert "channel_name" in config
-        assert "agent_uid" in config
-        assert config["app_id"] == "test_app_id"
-        assert config["channel_name"].startswith("channel_")
     
     @patch('agora_rest.agent.client.ConvoAIClient')
     def test_start_agent_success(self, mock_convo_client):
@@ -158,7 +143,11 @@ class TestAgentClient:
             agent_uid="123456",
             user_uid="789012",
             asr_config={"vendor": "deepgram", "api_key": "test_key"},
-            llm_config={"api_key": "test_key", "model": "gpt-4"},
+            llm_config={
+                "url": "https://api.openai.com/v1/chat/completions",
+                "api_key": "test_key",
+                "model": "gpt-4"
+            },
             tts_config={"vendor": "elevenlabs", "api_key": "test_key"}
         )
         

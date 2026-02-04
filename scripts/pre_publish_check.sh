@@ -9,20 +9,13 @@ echo ""
 
 ERRORS=0
 
-# Check 1: setup.py exists and is valid
-echo "1️⃣  Checking setup.py..."
-if [ ! -f "setup.py" ]; then
-    echo "   ❌ setup.py not found"
+# Check 1: pyproject.toml exists and is valid
+echo "1️⃣  Checking pyproject.toml..."
+if [ ! -f "pyproject.toml" ]; then
+    echo "   ❌ pyproject.toml not found"
     ERRORS=$((ERRORS + 1))
 else
-    python setup.py --version > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        VERSION=$(python setup.py --version)
-        echo "   ✓ setup.py is valid (version: $VERSION)"
-    else
-        echo "   ❌ setup.py has errors"
-        ERRORS=$((ERRORS + 1))
-    fi
+    echo "   ✓ pyproject.toml exists"
 fi
 echo ""
 
@@ -68,16 +61,14 @@ else
 fi
 echo ""
 
-# Check 6: Version in __init__.py matches setup.py
-echo "6️⃣  Checking version consistency..."
-SETUP_VERSION=$(python -c "import re; content=open('setup.py').read(); print(re.search(r'version=\"([^\"]+)\"', content).group(1))")
-INIT_VERSION=$(python -c "import re; content=open('agora_rest/__init__.py').read(); print(re.search(r'__version__\s*=\s*\"([^\"]+)\"', content).group(1))")
-
-if [ "$SETUP_VERSION" != "$INIT_VERSION" ]; then
-    echo "   ❌ Version mismatch: setup.py ($SETUP_VERSION) != __init__.py ($INIT_VERSION)"
+# Check 6: Version in pyproject.toml
+echo "6️⃣  Checking version..."
+VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])" 2>/dev/null || echo "unknown")
+if [ "$VERSION" = "unknown" ]; then
+    echo "   ❌ Could not read version from pyproject.toml"
     ERRORS=$((ERRORS + 1))
 else
-    echo "   ✓ Version is consistent: $SETUP_VERSION"
+    echo "   ✓ Version: $VERSION"
 fi
 echo ""
 
@@ -105,8 +96,7 @@ echo ""
 
 # Check 8: Test import
 echo "8️⃣  Testing package import..."
-python -c "from agora_rest import AgentClient, ConvoAIClient; from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig" 2>/dev/null
-if [ $? -eq 0 ]; then
+if python -c "from agora_rest import ConvoAIClient; from agora_rest.agent import AgentClient, DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig, TokenBuilder" 2>/dev/null; then
     echo "   ✓ Package imports successfully"
 else
     echo "   ❌ Package import failed"

@@ -4,7 +4,7 @@ Agora REST Client - Python SDK
 Python client for Agora REST APIs including Conversational AI.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 
 from .auth import Credential, BasicAuthCredential
 from .config import Config, ServiceRegion
@@ -24,7 +24,6 @@ from .resp import (
     LeaveResp,
 )
 from .client import ConvoAIClient
-from .agent import AgentClient
 
 __all__ = [
     # Version
@@ -50,6 +49,4 @@ __all__ = [
     "LeaveResp",
     # Client
     "ConvoAIClient",
-    # High-level Agent SDK
-    "AgentClient",
 ]

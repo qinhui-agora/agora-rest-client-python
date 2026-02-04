@@ -22,8 +22,13 @@ import time
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agora_rest import AgentClient
-from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
+from agora_rest.agent import (
+    AgentClient,
+    TokenBuilder,
+    DeepgramASRConfig,
+    OpenAILLMConfig,
+    ElevenLabsTTSConfig
+)
 
 
 def load_env():
@@ -89,12 +94,25 @@ def test_agent_lifecycle():
     )
     print("   ✓ Client created")
     
-    # Generate config
+    # Generate connection configuration
     print("\n2. Generating connection configuration...")
-    config_data = client.generate_config()
-    print(f"   ✓ Channel: {config_data['channel_name']}")
-    print(f"   ✓ User UID: {config_data['uid']}")
-    print(f"   ✓ Agent UID: {config_data['agent_uid']}")
+    import uuid
+    import random
+    channel_name = f"channel_{uuid.uuid4().hex[:8]}"
+    user_uid = str(random.randint(100000, 999999))
+    agent_uid = str(random.randint(100000, 999999))
+    
+    token = TokenBuilder.generate(
+        app_id=os.getenv("APP_ID"),
+        app_certificate=os.getenv("APP_CERTIFICATE"),
+        channel_name=channel_name,
+        uid=agent_uid
+    )
+    
+    print(f"   ✓ Channel: {channel_name}")
+    print(f"   ✓ User UID: {user_uid}")
+    print(f"   ✓ Agent UID: {agent_uid}")
+    print(f"   ✓ Token: {token[:20]}...")
     
     # Configure components
     print("\n3. Configuring ASR, LLM, TTS...")
@@ -107,9 +125,9 @@ def test_agent_lifecycle():
     print(f"\n4. Starting agent...")
     try:
         result = client.start_agent(
-            channel_name=config_data['channel_name'],
-            agent_uid=config_data['agent_uid'],
-            user_uid=config_data['uid'],
+            channel_name=channel_name,
+            agent_uid=agent_uid,
+            user_uid=user_uid,
             asr_config=asr,
             llm_config=llm,
             tts_config=tts

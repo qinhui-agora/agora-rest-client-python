@@ -61,8 +61,15 @@ TTS_ELEVENLABS_API_KEY=your_elevenlabs_key
 
 ```python
 import os
-from agora_rest import AgentClient
-from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
+import uuid
+import random
+from agora_rest.agent import (
+    AgentClient,
+    TokenBuilder,
+    DeepgramASRConfig,
+    OpenAILLMConfig,
+    ElevenLabsTTSConfig
+)
 
 # Create agent client
 client = AgentClient(
@@ -73,9 +80,19 @@ client = AgentClient(
 )
 
 # Generate connection configuration
-config_data = client.generate_config()
-print(f"Channel: {config_data['channel_name']}")
-print(f"Token: {config_data['token']}")
+channel_name = f"channel_{uuid.uuid4().hex[:8]}"
+user_uid = str(random.randint(100000, 999999))
+agent_uid = str(random.randint(100000, 999999))
+
+token = TokenBuilder.generate(
+    app_id=os.getenv("APP_ID"),
+    app_certificate=os.getenv("APP_CERTIFICATE"),
+    channel_name=channel_name,
+    uid=agent_uid
+)
+
+print(f"Channel: {channel_name}")
+print(f"Token: {token}")
 
 # Configure ASR, LLM, TTS
 asr = DeepgramASRConfig(api_key=os.getenv("ASR_DEEPGRAM_API_KEY"))
@@ -84,9 +101,9 @@ tts = ElevenLabsTTSConfig(api_key=os.getenv("TTS_ELEVENLABS_API_KEY"))
 
 # Start an agent
 result = client.start_agent(
-    channel_name=config_data['channel_name'],
-    agent_uid=config_data['agent_uid'],
-    user_uid=config_data['uid'],
+    channel_name=channel_name,
+    agent_uid=agent_uid,
+    user_uid=user_uid,
     asr_config=asr,
     llm_config=llm,
     tts_config=tts
@@ -94,9 +111,8 @@ result = client.start_agent(
 
 print(f"Agent started: {result['agent_id']}")
 
-
 # Stop the agent
-manager.stop_agent(result['agent_id'])
+client.stop_agent(result['agent_id'])
 print("Agent stopped")
 ```
 
@@ -123,7 +139,9 @@ Core business logic for agent operations.
 
 ```python
 import os
-from agora_rest import AgentClient
+import uuid
+import random
+from agora_rest.agent import AgentClient, TokenBuilder
 
 client = AgentClient(
     app_id=os.getenv("APP_ID"),
@@ -133,40 +151,57 @@ client = AgentClient(
 )
 
 # Generate connection configuration
-config_data = client.generate_config()
+channel_name = f"channel_{uuid.uuid4().hex[:8]}"
+user_uid = str(random.randint(100000, 999999))
+agent_uid = str(random.randint(100000, 999999))
+
+token = TokenBuilder.generate(
+    app_id=os.getenv("APP_ID"),
+    app_certificate=os.getenv("APP_CERTIFICATE"),
+    channel_name=channel_name,
+    uid=agent_uid
+)
 
 # Start an agent
-result = manager.start_agent(
-    channel_name="my_channel",
-    agent_uid="123",
-    user_uid="456",
+result = client.start_agent(
+    channel_name=channel_name,
+    agent_uid=agent_uid,
+    user_uid=user_uid,
     asr_config={...},
     llm_config={...},
     tts_config={...}
 )
 
 # Stop an agent
-manager.stop_agent(agent_id)
+client.stop_agent(agent_id)
 ```
 
 ### Configuration Components
 
 ```python
-from agora_rest.agent import ASRConfig, LLMConfig, TTSConfig
+from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
 
-# ASR Configuration (Deepgram) - uses defaults
-asr = ASRConfig(api_key="your_deepgram_key")
+# ASR Configuration (Deepgram)
+asr = DeepgramASRConfig(
+    api_key="your_deepgram_key",
+    language="en-US"  # Optional, defaults to "en"
+)
 
-# LLM Configuration (OpenAI) - uses defaults
-llm = LLMConfig(api_key="your_openai_key")
+# LLM Configuration (OpenAI)
+llm = OpenAILLMConfig(
+    api_key="your_openai_key",
+    model="gpt-4o",  # Optional, defaults to "gpt-4o"
+    system_message="You are a helpful assistant",  # Optional
+    greeting="Hello! How can I help you?",  # Optional
+    max_tokens=512  # Optional
+)
 
-# TTS Configuration (ElevenLabs) - uses defaults
-tts = TTSConfig(api_key="your_elevenlabs_key")
-
-# Optional: Customize if needed
-# llm.model = "gpt-4o"
-# llm.system_message = "You are a helpful assistant"
-# asr.language = "zh-CN"
+# TTS Configuration (ElevenLabs)
+tts = ElevenLabsTTSConfig(
+    api_key="your_elevenlabs_key",
+    voice_id="pNInz6obpgDQGcFmaJgB",  # Optional, defaults to Adam
+    model="eleven_turbo_v2_5"  # Optional
+)
 ```
 
 ## Supported Vendors

@@ -44,8 +44,15 @@ The high-level API provides a simplified interface through the `AgentClient` cla
 **Example:**
 ```python
 import os
-from agora_rest import AgentClient
-from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
+import uuid
+import random
+from agora_rest.agent import (
+    AgentClient,
+    TokenBuilder,
+    DeepgramASRConfig,
+    OpenAILLMConfig,
+    ElevenLabsTTSConfig
+)
 
 # Create client
 client = AgentClient(
@@ -55,30 +62,35 @@ client = AgentClient(
     customer_secret=os.getenv("API_SECRET")
 )
 
-# Generate connection config (token, channel, UIDs)
-config_data = manager.generate_config()
+# Generate connection configuration
+channel_name = f"channel_{uuid.uuid4().hex[:8]}"
+user_uid = str(random.randint(100000, 999999))
+agent_uid = str(random.randint(100000, 999999))
 
-# Configure components with API keys (uses defaults for other settings)
-asr = ASRConfig(api_key=config.deepgram_api_key)
-llm = LLMConfig(api_key=config.llm_api_key)
-tts = TTSConfig(api_key=config.tts_elevenlabs_api_key)
+token = TokenBuilder.generate(
+    app_id=os.getenv("APP_ID"),
+    app_certificate=os.getenv("APP_CERTIFICATE"),
+    channel_name=channel_name,
+    uid=agent_uid
+)
 
-# Optional: Customize if needed
-# llm.model = "gpt-4o"
-# llm.system_message = "You are a helpful AI assistant."
+# Configure components
+asr = DeepgramASRConfig(api_key=os.getenv("ASR_DEEPGRAM_API_KEY"))
+llm = OpenAILLMConfig(api_key=os.getenv("LLM_API_KEY"))
+tts = ElevenLabsTTSConfig(api_key=os.getenv("TTS_ELEVENLABS_API_KEY"))
 
 # Start agent
-result = manager.start_agent(
-    channel_name=config_data['channel_name'],
-    agent_uid=config_data['agent_uid'],
-    user_uid=config_data['uid'],
-    asr_config=asr.to_dict(),
-    llm_config=llm.to_dict(),
-    tts_config=tts.to_dict()
+result = client.start_agent(
+    channel_name=channel_name,
+    agent_uid=agent_uid,
+    user_uid=user_uid,
+    asr_config=asr,
+    llm_config=llm,
+    tts_config=tts
 )
 
 # Stop agent
-manager.stop_agent(result['agent_id'])
+client.stop_agent(result['agent_id'])
 ```
 
 ### 2. Low-Level API
