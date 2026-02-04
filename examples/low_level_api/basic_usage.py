@@ -1,7 +1,7 @@
 """
 Low-level API usage example for Agora REST Client Python
 
-Demonstrates direct usage of the ConvoAIClient without the high-level AgentManager.
+Demonstrates direct usage of the ConvoAIClient without the high-level AgentClient.
 This example shows:
 1. Creating a client with configuration
 2. Joining an agent with custom TTS configuration

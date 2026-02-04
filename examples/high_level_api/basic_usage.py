@@ -8,27 +8,37 @@ Demonstrates how to use the high-level Agent API:
 4. Stop the agent
 """
 import os
-from agora_rest import AgentConfig, AgentManager
-from agora_rest.agent import ASRConfig, LLMConfig, TTSConfig
+from agora_rest import AgentClient
+from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
 
 
 def main():
     """Main example function"""
     
-    # Load configuration from environment variables
-    # Automatically loads .env or .env.local if available
-    config = AgentConfig.from_env()
+    # Load Agora credentials from environment
+    app_id = os.getenv("APP_ID")
+    app_certificate = os.getenv("APP_CERTIFICATE")
+    api_key = os.getenv("API_KEY")
+    api_secret = os.getenv("API_SECRET")
     
-    print("✓ Configuration loaded")
+    if not all([app_id, app_certificate, api_key, api_secret]):
+        raise ValueError("Missing required Agora credentials in environment variables")
     
-    # Create agent manager
-    manager = AgentManager(config)
+    print("✓ Agora credentials loaded")
     
-    print("✓ Agent manager created")
+    # Create agent client
+    client = AgentClient(
+        app_id=app_id,
+        app_certificate=app_certificate,
+        customer_id=api_key,
+        customer_secret=api_secret
+    )
+    
+    print("✓ Agent client created")
     
     # Generate connection configuration
     # This creates: token, channel_name, user UID, agent UID
-    config_data = manager.generate_config()
+    config_data = client.generate_config()
     
     print("\n📋 Connection Configuration:")
     print(f"  - App ID: {config_data['app_id']}")
@@ -37,14 +47,17 @@ def main():
     print(f"  - Agent UID: {config_data['agent_uid']}")
     print(f"  - Token: {config_data['token'][:20]}...")
     
-    # Configure ASR (Deepgram) - uses default model and language
-    asr = ASRConfig(api_key=config.deepgram_api_key)
+    # Configure ASR (Deepgram)
+    asr_api_key = os.getenv("ASR_DEEPGRAM_API_KEY")
+    asr = DeepgramASRConfig(api_key=asr_api_key)
     
-    # Configure LLM (OpenAI) - uses default model, system message, and greeting
-    llm = LLMConfig(api_key=config.llm_api_key)
+    # Configure LLM (OpenAI)
+    llm_api_key = os.getenv("LLM_API_KEY")
+    llm = OpenAILLMConfig(api_key=llm_api_key)
     
-    # Configure TTS (ElevenLabs) - uses default model and voice
-    tts = TTSConfig(api_key=config.tts_elevenlabs_api_key)
+    # Configure TTS (ElevenLabs)
+    tts_api_key = os.getenv("TTS_ELEVENLABS_API_KEY")
+    tts = ElevenLabsTTSConfig(api_key=tts_api_key)
     
     # Optional: Customize configurations
     # llm.model = "gpt-4o"
@@ -54,19 +67,19 @@ def main():
     # asr.language = "zh-CN"
     # tts.voice_id = "your_custom_voice_id"
     
-    print("\n✓ ASR, LLM, TTS configured with defaults")
+    print("\n✓ ASR, LLM, TTS configured")
     
     # Start the agent
     print(f"\n🚀 Starting agent in channel '{config_data['channel_name']}'...")
     
     try:
-        result = manager.start_agent(
+        result = client.start_agent(
             channel_name=config_data['channel_name'],
             agent_uid=config_data['agent_uid'],
             user_uid=config_data['uid'],
-            asr_config=asr.to_dict(),
-            llm_config=llm.to_dict(),
-            tts_config=tts.to_dict()
+            asr_config=asr,
+            llm_config=llm,
+            tts_config=tts
         )
         
         agent_id = result['agent_id']
@@ -77,7 +90,7 @@ def main():
         
         # Stop the agent
         print(f"\n🛑 Stopping agent {agent_id}...")
-        manager.stop_agent(agent_id)
+        client.stop_agent(agent_id)
         print("✓ Agent stopped successfully!")
         
     except ValueError as e:

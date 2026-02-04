@@ -55,48 +55,45 @@ ASR_DEEPGRAM_API_KEY=your_deepgram_key
 
 # TTS - ElevenLabs (Optional)
 TTS_ELEVENLABS_API_KEY=your_elevenlabs_key
-
-# Server Configuration (Optional)
-PORT=8000
 ```
 
 ### 2. Initialize and use the Agent
 
 ```python
-from agora_rest import AgentConfig, AgentManager
+import os
+from agora_rest import AgentClient
+from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
 
-# Load configuration from environment
-config = AgentConfig.from_env()
-
-# Create agent manager
-manager = AgentManager(config)
+# Create agent client
+client = AgentClient(
+    app_id=os.getenv("APP_ID"),
+    app_certificate=os.getenv("APP_CERTIFICATE"),
+    customer_id=os.getenv("API_KEY"),
+    customer_secret=os.getenv("API_SECRET")
+)
 
 # Generate connection configuration
-config_data = manager.generate_config()
+config_data = client.generate_config()
 print(f"Channel: {config_data['channel_name']}")
 print(f"Token: {config_data['token']}")
 
+# Configure ASR, LLM, TTS
+asr = DeepgramASRConfig(api_key=os.getenv("ASR_DEEPGRAM_API_KEY"))
+llm = OpenAILLMConfig(api_key=os.getenv("LLM_API_KEY"))
+tts = ElevenLabsTTSConfig(api_key=os.getenv("TTS_ELEVENLABS_API_KEY"))
+
 # Start an agent
-result = manager.start_agent(
+result = client.start_agent(
     channel_name=config_data['channel_name'],
     agent_uid=config_data['agent_uid'],
     user_uid=config_data['uid'],
-    asr_config={
-        "vendor": "deepgram",
-        "api_key": config.deepgram_api_key,
-    },
-    llm_config={
-        "url": "https://api.openai.com/v1",
-        "api_key": config.llm_api_key,
-        "model": "gpt-4",
-    },
-    tts_config={
-        "vendor": "elevenlabs",
-        "api_key": config.tts_elevenlabs_api_key,
-    }
+    asr_config=asr,
+    llm_config=llm,
+    tts_config=tts
 )
 
 print(f"Agent started: {result['agent_id']}")
+
 
 # Stop the agent
 manager.stop_agent(result['agent_id'])
@@ -118,57 +115,25 @@ print("Agent stopped")
 | `TTS_ELEVENLABS_API_KEY` | ElevenLabs TTS API key | Optional |
 | `PORT` | Server port (default: 8000) | Optional |
 
-### Configuration from Code
-
-```python
-from agora_rest import AgentConfig
-
-config = AgentConfig(
-    app_id="your_app_id",
-    app_certificate="your_certificate",
-    customer_id="your_customer_id",  # API_KEY
-    customer_secret="your_customer_secret",  # API_SECRET
-    llm_api_key="your_openai_key",
-    deepgram_api_key="your_deepgram_key",  # Optional
-    tts_elevenlabs_api_key="your_elevenlabs_key",  # Optional
-)
-```
-
 ## API Reference
 
-### AgentConfig
-
-Configuration management for Agora services.
-
-```python
-# Load from environment
-config = AgentConfig.from_env()
-
-# Load from custom .env file
-config = AgentConfig.from_env(env_file="/path/to/.env")
-
-# Create manually
-config = AgentConfig(
-    app_id="...",
-    app_certificate="...",
-    customer_id="...",  # API_KEY
-    customer_secret="...",  # API_SECRET
-    llm_api_key="...",
-    # Optional
-    deepgram_api_key="...",
-    tts_elevenlabs_api_key="...",
-)
-```
-
-### AgentManager
+### AgentClient
 
 Core business logic for agent operations.
 
 ```python
-manager = AgentManager(config)
+import os
+from agora_rest import AgentClient
+
+client = AgentClient(
+    app_id=os.getenv("APP_ID"),
+    app_certificate=os.getenv("APP_CERTIFICATE"),
+    customer_id=os.getenv("API_KEY"),
+    customer_secret=os.getenv("API_SECRET")
+)
 
 # Generate connection configuration
-config_data = manager.generate_config()
+config_data = client.generate_config()
 
 # Start an agent
 result = manager.start_agent(

@@ -33,7 +33,7 @@ python examples/low_level_api/basic_usage.py
 
 **Location:** `high_level_api/basic_usage.py`
 
-The high-level API provides a simplified interface through the `AgentManager` class.
+The high-level API provides a simplified interface through the `AgentClient` class.
 
 **Features:**
 - Automatic configuration management
@@ -43,12 +43,17 @@ The high-level API provides a simplified interface through the `AgentManager` cl
 
 **Example:**
 ```python
-from agora_rest import AgentConfig, AgentManager
-from agora_rest.agent import ASRConfig, LLMConfig, TTSConfig
+import os
+from agora_rest import AgentClient
+from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
 
-# Load configuration
-config = AgentConfig.from_env()
-manager = AgentManager(config)
+# Create client
+client = AgentClient(
+    app_id=os.getenv("APP_ID"),
+    app_certificate=os.getenv("APP_CERTIFICATE"),
+    customer_id=os.getenv("API_KEY"),
+    customer_secret=os.getenv("API_SECRET")
+)
 
 # Generate connection config (token, channel, UIDs)
 config_data = manager.generate_config()

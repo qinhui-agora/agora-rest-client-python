@@ -24,7 +24,7 @@ from .resp import (
     LeaveResp,
 )
 from .client import ConvoAIClient
-from .agent import AgentConfig, AgentManager
+from .agent import AgentClient
 
 __all__ = [
     # Version
@@ -51,6 +51,5 @@ __all__ = [
     # Client
     "ConvoAIClient",
     # High-level Agent SDK
-    "AgentConfig",
-    "AgentManager",
+    "AgentClient",
 ]

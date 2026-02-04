@@ -7,84 +7,87 @@ Supported vendors:
 - ASR: Deepgram
 - LLM: OpenAI
 - TTS: ElevenLabs
+
+Users can create custom configurations by inheriting from base classes.
 """
-from typing import Optional
+from typing import Optional, Dict, Any, Protocol
 from dataclasses import dataclass, field
 
 
-# Default configurations
-DEFAULT_DEEPGRAM_URL = "wss://api.deepgram.com/v1/listen"
-DEFAULT_DEEPGRAM_MODEL = "nova-2"
-DEFAULT_DEEPGRAM_LANGUAGE = "en-US"
+# Configuration Protocol
+class ConfigProtocol(Protocol):
+    """Protocol that all config classes should implement"""
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary"""
+        ...
 
-DEFAULT_OPENAI_URL = "https://api.openai.com/v1"
-DEFAULT_OPENAI_MODEL = "gpt-4"
-DEFAULT_OPENAI_MAX_TOKENS = 1024
-DEFAULT_OPENAI_MAX_HISTORY = 64
-DEFAULT_OPENAI_SYSTEM_MESSAGE = "You are a helpful assistant."
-DEFAULT_OPENAI_GREETING = "Hello, how can I help you?"
 
-DEFAULT_ELEVENLABS_MODEL = "eleven_multilingual_v2"
-DEFAULT_ELEVENLABS_VOICE = "pNInz6obpgDQGcFmaJgB"
+# Base Classes
+@dataclass
+class BaseASRConfig:
+    """Base class for ASR configurations"""
+    vendor: str
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary, filtering out None values"""
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
 @dataclass
-class ASRConfig:
-    """ASR (Automatic Speech Recognition) Configuration - Deepgram"""
+class BaseLLMConfig:
+    """Base class for LLM configurations"""
+    api_key: str
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary, filtering out None values"""
+        return {k: v for k, v in self.__dict__.items() if v is not None}
+
+
+@dataclass
+class BaseTTSConfig:
+    """Base class for TTS configurations"""
+    vendor: str
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary, filtering out None values"""
+        return {k: v for k, v in self.__dict__.items() if v is not None}
+
+
+# Deepgram ASR Configuration
+@dataclass
+class DeepgramASRConfig(BaseASRConfig):
+    """Deepgram ASR Configuration"""
     vendor: str = "deepgram"
     api_key: Optional[str] = None
-    url: str = DEFAULT_DEEPGRAM_URL
-    model: str = DEFAULT_DEEPGRAM_MODEL
-    language: str = DEFAULT_DEEPGRAM_LANGUAGE
-    
-    def to_dict(self):
-        """Convert to dictionary"""
-        return {
-            "vendor": self.vendor,
-            "api_key": self.api_key,
-            "url": self.url,
-            "model": self.model,
-            "language": self.language
-        }
+    url: str = "wss://api.deepgram.com/v1/listen"
+    model: str = "nova-2"
+    language: str = "en-US"
 
 
+# OpenAI LLM Configuration
 @dataclass
-class LLMConfig:
-    """LLM (Large Language Model) Configuration - OpenAI"""
-    url: str = DEFAULT_OPENAI_URL
+class OpenAILLMConfig(BaseLLMConfig):
+    """OpenAI LLM Configuration"""
     api_key: str = ""
-    model: str = DEFAULT_OPENAI_MODEL
-    max_tokens: int = DEFAULT_OPENAI_MAX_TOKENS
-    max_history: int = DEFAULT_OPENAI_MAX_HISTORY
-    system_message: str = DEFAULT_OPENAI_SYSTEM_MESSAGE
-    greeting: str = DEFAULT_OPENAI_GREETING
-    
-    def to_dict(self):
-        """Convert to dictionary"""
-        return {
-            "url": self.url,
-            "api_key": self.api_key,
-            "model": self.model,
-            "max_tokens": self.max_tokens,
-            "max_history": self.max_history,
-            "system_message": self.system_message,
-            "greeting": self.greeting
-        }
+    url: str = "https://api.openai.com/v1"
+    model: str = "gpt-4"
+    max_tokens: int = 1024
+    max_history: int = 64
+    system_message: str = "You are a helpful assistant."
+    greeting: str = "Hello, how can I help you?"
 
 
+# ElevenLabs TTS Configuration
 @dataclass
-class TTSConfig:
-    """TTS (Text-to-Speech) Configuration - ElevenLabs"""
+class ElevenLabsTTSConfig(BaseTTSConfig):
+    """ElevenLabs TTS Configuration"""
     vendor: str = "elevenlabs"
     api_key: Optional[str] = None
-    model_id: str = DEFAULT_ELEVENLABS_MODEL
-    voice_id: str = DEFAULT_ELEVENLABS_VOICE
-    
-    def to_dict(self):
-        """Convert to dictionary"""
-        return {
-            "vendor": self.vendor,
-            "api_key": self.api_key,
-            "model_id": self.model_id,
-            "voice_id": self.voice_id
-        }
+    model_id: str = "eleven_multilingual_v2"
+    voice_id: str = "pNInz6obpgDQGcFmaJgB"
+
+
+# Backward compatibility aliases
+ASRConfig = DeepgramASRConfig
+LLMConfig = OpenAILLMConfig
+TTSConfig = ElevenLabsTTSConfig
