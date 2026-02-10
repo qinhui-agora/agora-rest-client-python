@@ -13,9 +13,6 @@ from ..config import Config, ServiceRegion
 from ..auth import BasicAuthCredential
 from .token import TokenBuilder
 from .property import PropertyBuilder
-from .components import BaseASRConfig, BaseLLMConfig, BaseTTSConfig
-
-
 class AgentClient:
     """Handles business logic and API calls for agent operations"""
     
@@ -97,9 +94,9 @@ class AgentClient:
         channel_name: str,
         agent_uid: str,
         user_uid: str,
-        asr_config: Union[BaseASRConfig, Dict[str, Any]],
-        llm_config: Union[BaseLLMConfig, Dict[str, Any]],
-        tts_config: Union[BaseTTSConfig, Dict[str, Any]]
+        asr_config: Union[Dict[str, Any], Any],
+        llm_config: Union[Dict[str, Any], Any],
+        tts_config: Union[Dict[str, Any], Any]
     ) -> Dict[str, Any]:
         """
         Start agent with ASR, LLM, and TTS configuration
@@ -121,9 +118,9 @@ class AgentClient:
                 channel_name="my_channel",
                 agent_uid="123456",
                 user_uid="789012",
-                asr_config=DeepgramASRConfig(api_key="xxx"),
+                asr_config=DeepgramASRConfig(key="xxx", model="nova-2", language="en-US"),
                 llm_config=OpenAILLMConfig(api_key="yyy"),
-                tts_config=ElevenLabsTTSConfig(api_key="zzz")
+                tts_config=ElevenLabsTTSConfig(key="zzz", model_id="eleven_multilingual_v2", voice_id="xxx")
             )
             
             # Using dictionaries
@@ -136,10 +133,32 @@ class AgentClient:
                 tts_config={"vendor": "elevenlabs", "api_key": "zzz"}
             )
         """
-        # Convert config objects to dictionaries if needed
-        asr_dict = asr_config.to_dict() if hasattr(asr_config, 'to_dict') else asr_config
-        llm_dict = llm_config.to_dict() if hasattr(llm_config, 'to_dict') else llm_config
-        tts_dict = tts_config.to_dict() if hasattr(tts_config, 'to_dict') else tts_config
+        # Convert config objects to dictionaries or pass through directly
+        # Config objects with to_pydantic() method will be handled by PropertyBuilder
+        # Dataclasses with to_dict() will be converted to dict
+        # Plain dicts will be passed through
+        
+        if hasattr(asr_config, 'to_pydantic'):
+            # It's a config object, pass directly to PropertyBuilder
+            asr_dict = asr_config
+        elif hasattr(asr_config, 'to_dict'):
+            asr_dict = asr_config.to_dict()
+        else:
+            asr_dict = asr_config
+        
+        if hasattr(llm_config, 'to_dict'):
+            llm_dict = llm_config.to_dict()
+        else:
+            llm_dict = llm_config
+        
+        if hasattr(tts_config, 'to_pydantic'):
+            # It's a config object, pass directly to PropertyBuilder
+            tts_dict = tts_config
+        elif hasattr(tts_config, 'to_dict'):
+            tts_dict = tts_config.to_dict()
+        else:
+            tts_dict = tts_config
+        
         
         # Generate Agent Token
         agent_token = TokenBuilder.generate(

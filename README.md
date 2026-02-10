@@ -94,10 +94,24 @@ token = TokenBuilder.generate(
 print(f"Channel: {channel_name}")
 print(f"Token: {token}")
 
-# Configure ASR, LLM, TTS
+# Configure ASR, LLM, TTS - simple, only required fields
 asr = DeepgramASRConfig(api_key=os.getenv("ASR_DEEPGRAM_API_KEY"))
 llm = OpenAILLMConfig(api_key=os.getenv("LLM_API_KEY"))
 tts = ElevenLabsTTSConfig(api_key=os.getenv("TTS_ELEVENLABS_API_KEY"))
+
+# Optional: Customize configurations
+# asr.language = "zh-CN"
+# llm.model = "gpt-4o"
+# tts.voice_id = "custom_voice_id"
+
+# Alternative: Use dictionaries
+# asr = {"vendor": "deepgram", "api_key": "xxx", "language": "zh-CN"}
+# llm = {"api_key": "xxx", "model": "gpt-4o"}
+# tts = {"vendor": "elevenlabs", "api_key": "xxx"}
+
+# Advanced: Use custom vendors (Azure, Google, etc.)
+# asr = {"vendor": "azure", "params": {"subscription_key": "xxx", "region": "eastus"}}
+# tts = {"vendor": "azure", "params": {"subscription_key": "xxx", "voice_name": "zh-CN-XiaoxiaoNeural"}}
 
 # Start an agent
 result = client.start_agent(
@@ -181,39 +195,132 @@ client.stop_agent(agent_id)
 ```python
 from agora_rest.agent import DeepgramASRConfig, OpenAILLMConfig, ElevenLabsTTSConfig
 
-# ASR Configuration (Deepgram)
-asr = DeepgramASRConfig(
-    api_key="your_deepgram_key",
-    language="en-US"  # Optional, defaults to "en"
-)
+# ASR Configuration (Deepgram) - simple, only api_key required
+asr = DeepgramASRConfig(api_key="your_deepgram_key")
+# Optional: customize with defaults
+# asr.language = "zh-CN"
+# asr.model = "nova-3"
 
-# LLM Configuration (OpenAI)
-llm = OpenAILLMConfig(
-    api_key="your_openai_key",
-    model="gpt-4o",  # Optional, defaults to "gpt-4o"
-    system_message="You are a helpful assistant",  # Optional
-    greeting="Hello! How can I help you?",  # Optional
-    max_tokens=512  # Optional
-)
+# LLM Configuration (OpenAI) - simple, only api_key required
+llm = OpenAILLMConfig(api_key="your_openai_key")
+# Optional: customize
+# llm.model = "gpt-4o"
+# llm.system_message = "You are a helpful assistant"
+# llm.max_tokens = 512
 
-# TTS Configuration (ElevenLabs)
-tts = ElevenLabsTTSConfig(
-    api_key="your_elevenlabs_key",
-    voice_id="pNInz6obpgDQGcFmaJgB",  # Optional, defaults to Adam
-    model="eleven_turbo_v2_5"  # Optional
-)
+# TTS Configuration (ElevenLabs) - simple, only api_key required
+tts = ElevenLabsTTSConfig(api_key="your_elevenlabs_key")
+# Optional: customize
+# tts.voice_id = "custom_voice_id"
+# tts.stability = 0.5
 ```
 
 ## Supported Vendors
 
-### ASR (Automatic Speech Recognition)
-- ✅ Deepgram
+### Built-in Vendors (Configuration Classes Provided)
 
-### LLM (Large Language Model)
-- ✅ OpenAI (GPT-4, GPT-3.5)
+All built-in vendors have dedicated configuration classes for easy use.
 
-### TTS (Text-to-Speech)
-- ✅ ElevenLabs
+#### ASR (Automatic Speech Recognition)
+- ✅ **Deepgram** - `DeepgramASRConfig` (Recommended for English)
+- ✅ **Fengming** - `FengmingASRConfig`
+- ✅ **Tencent** - `TencentASRConfig`
+- ✅ **Microsoft** - `MicrosoftASRConfig` (Azure Speech)
+- ✅ **Ares** - `AresASRConfig`
+
+#### LLM (Large Language Model)
+- ✅ **OpenAI** - `OpenAILLMConfig` (GPT-4, GPT-3.5, GPT-4o)
+- ✅ **Azure OpenAI** - Use `OpenAILLMConfig` (Compatible with OpenAI API)
+- ✅ **Any OpenAI-compatible API** - Use `OpenAILLMConfig`
+
+#### TTS (Text-to-Speech)
+- ✅ **ElevenLabs** - `ElevenLabsTTSConfig` (Recommended for quality)
+- ✅ **Minimax** - `MinimaxTTSConfig`
+- ✅ **Tencent** - `TencentTTSConfig`
+- ✅ **Bytedance** - `BytedanceTTSConfig`
+- ✅ **Microsoft** - `MicrosoftTTSConfig` (Azure TTS)
+- ✅ **Cartesia** - `CartesiaTTSConfig`
+- ✅ **OpenAI** - `OpenAITTSConfig` (OpenAI TTS)
+
+### Usage Examples
+
+#### Using Built-in Vendors (Simple)
+
+```python
+from agora_rest.agent import (
+    DeepgramASRConfig,
+    MicrosoftASRConfig,
+    TencentASRConfig,
+    OpenAILLMConfig,
+    ElevenLabsTTSConfig,
+    MicrosoftTTSConfig,
+    OpenAITTSConfig,
+)
+
+# ASR - Deepgram (English) - simple, only api_key required
+asr = DeepgramASRConfig(api_key="xxx")
+# Optional: customize
+# asr.language = "zh-CN"
+# asr.model = "nova-3"
+
+# ASR - Microsoft (Chinese)
+asr = MicrosoftASRConfig(key="xxx", language="zh-CN")
+
+# ASR - Tencent
+asr = TencentASRConfig(
+    key="xxx",
+    app_id="xxx",
+    secret="xxx"
+)
+
+# LLM - OpenAI
+llm = OpenAILLMConfig(api_key="xxx")
+# Optional: customize
+# llm.model = "gpt-4o"
+
+# TTS - ElevenLabs - simple, only api_key required
+tts = ElevenLabsTTSConfig(api_key="xxx")
+# Optional: customize
+# tts.voice_id = "custom_voice_id"
+
+# TTS - Microsoft (Chinese voice)
+tts = MicrosoftTTSConfig(
+    key="xxx",
+    voice_name="zh-CN-XiaoxiaoNeural"
+)
+
+# TTS - OpenAI
+tts = OpenAITTSConfig(api_key="xxx")
+# Optional: customize
+# tts.model = "tts-1-hd"
+# tts.voice = "nova"
+```
+
+#### Using Custom Vendors (Advanced)
+
+For vendors not listed above, use dictionary with `params`:
+
+```python
+# Example: Custom ASR vendor
+asr = {
+    "vendor": "custom_asr",
+    "params": {
+        "api_key": "xxx",
+        "custom_param": "value"
+    }
+}
+
+# Example: Custom TTS vendor
+tts = {
+    "vendor": "custom_tts",
+    "params": {
+        "api_key": "xxx",
+        "custom_param": "value"
+    }
+}
+
+client.start_agent(..., asr_config=asr, tts_config=tts)
+```
 
 ## Examples
 

@@ -60,7 +60,7 @@ class TestAgentClient:
             customer_secret="test_secret"
         )
         
-        # Configure components
+        # Configure components - using simple config objects with defaults
         asr = DeepgramASRConfig(api_key="test_asr_key")
         llm = OpenAILLMConfig(api_key="test_llm_key")
         tts = ElevenLabsTTSConfig(api_key="test_tts_key")
@@ -101,7 +101,7 @@ class TestAgentClient:
             customer_secret="test_secret"
         )
         
-        # Configure components
+        # Configure components - using simple config objects with defaults
         asr = DeepgramASRConfig(api_key="test_asr_key")
         llm = OpenAILLMConfig(api_key="test_llm_key")
         tts = ElevenLabsTTSConfig(api_key="test_tts_key")

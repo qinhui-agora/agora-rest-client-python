@@ -75,25 +75,39 @@ def main():
     print(f"  - Agent UID: {agent_uid}")
     print(f"  - Token: {token[:20]}...")
     
-    # Configure ASR (Deepgram)
+    # Configure ASR (Deepgram) - simple, only api_key required
     asr_api_key = os.getenv("ASR_DEEPGRAM_API_KEY")
     asr = DeepgramASRConfig(api_key=asr_api_key)
     
-    # Configure LLM (OpenAI)
+    # Configure LLM (OpenAI) - simple, only api_key required
     llm_api_key = os.getenv("LLM_API_KEY")
     llm = OpenAILLMConfig(api_key=llm_api_key)
     
-    # Configure TTS (ElevenLabs)
+    # Configure TTS (ElevenLabs) - simple, only api_key required
     tts_api_key = os.getenv("TTS_ELEVENLABS_API_KEY")
     tts = ElevenLabsTTSConfig(api_key=tts_api_key)
     
-    # Optional: Customize configurations
+    # Optional: Customize configurations by modifying fields
+    # asr.language = "zh-CN"
+    # asr.model = "nova-3"
     # llm.model = "gpt-4o"
     # llm.system_message = "You are a helpful AI assistant."
     # llm.greeting = "Hello! How can I help you today?"
-    # asr.model = "nova-2"
-    # asr.language = "zh-CN"
     # tts.voice_id = "your_custom_voice_id"
+    # tts.stability = 0.5
+    # tts.similarity_boost = 0.8
+    
+    # Alternative: Use dictionaries for more flexibility
+    # This approach supports both built-in vendors and custom field names
+    # asr = {"vendor": "deepgram", "api_key": asr_api_key, "model": "nova-2", "language": "zh-CN"}
+    # llm = {"api_key": llm_api_key, "url": "https://api.openai.com/v1", "model": "gpt-4o"}
+    # tts = {"vendor": "elevenlabs", "api_key": tts_api_key, "voice_id": "custom_voice_id"}
+    
+    # Advanced: Use custom vendors (Azure, Google, etc.)
+    # For custom vendors, provide the complete 'params' structure:
+    # asr = {"vendor": "azure", "params": {"subscription_key": "xxx", "region": "eastus", "language": "zh-CN"}}
+    # tts = {"vendor": "azure", "params": {"subscription_key": "xxx", "region": "eastus", "voice_name": "zh-CN-XiaoxiaoNeural"}}
+
     
     print("\n✓ ASR, LLM, TTS configured")
     

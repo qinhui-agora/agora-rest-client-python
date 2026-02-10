@@ -6,20 +6,19 @@ from agora_rest.agent import (
     DeepgramASRConfig,
     OpenAILLMConfig,
     ElevenLabsTTSConfig,
-    BaseASRConfig,
-    BaseLLMConfig,
-    BaseTTSConfig,
+    MicrosoftASRConfig,
+    MicrosoftTTSConfig,
+    OpenAITTSConfig,
 )
 
 
 class TestDeepgramASRConfig:
-    """Test DeepgramASRConfig"""
+    """Test DeepgramASRConfig (dataclass wrapper)"""
     
     def test_default_values(self):
         """Test default configuration values"""
         config = DeepgramASRConfig(api_key="test_key")
         
-        assert config.vendor == "deepgram"
         assert config.api_key == "test_key"
         assert config.url == "wss://api.deepgram.com/v1/listen"
         assert config.model == "nova-2"
@@ -36,20 +35,44 @@ class TestDeepgramASRConfig:
         assert config.model == "nova-3"
         assert config.language == "zh-CN"
     
-    def test_to_dict(self):
-        """Test conversion to dictionary"""
+    def test_to_pydantic(self):
+        """Test conversion to Pydantic model"""
         config = DeepgramASRConfig(api_key="test_key")
-        result = config.to_dict()
+        pydantic_model = config.to_pydantic()
         
-        assert isinstance(result, dict)
-        assert result["vendor"] == "deepgram"
-        assert result["api_key"] == "test_key"
-        assert "url" in result
-        assert "model" in result
+        assert pydantic_model.key == "test_key"
+        assert pydantic_model.url == "wss://api.deepgram.com/v1/listen"
+        assert pydantic_model.model == "nova-2"
+
+
+class TestMicrosoftASRConfig:
+    """Test MicrosoftASRConfig (dataclass wrapper)"""
+    
+    def test_creation(self):
+        """Test Microsoft ASR configuration"""
+        config = MicrosoftASRConfig(key="test_key")
+        
+        assert config.key == "test_key"
+        assert config.region == "eastus"
+        assert config.language == "en-US"
+        assert config.phrase_list == []
+    
+    def test_to_pydantic(self):
+        """Test conversion to Pydantic model"""
+        config = MicrosoftASRConfig(
+            key="test_key",
+            region="westus",
+            language="zh-CN"
+        )
+        pydantic_model = config.to_pydantic()
+        
+        assert pydantic_model.key == "test_key"
+        assert pydantic_model.region == "westus"
+        assert pydantic_model.language == "zh-CN"
 
 
 class TestOpenAILLMConfig:
-    """Test OpenAILLMConfig"""
+    """Test OpenAILLMConfig (dataclass)"""
     
     def test_default_values(self):
         """Test default configuration values"""
@@ -85,13 +108,12 @@ class TestOpenAILLMConfig:
 
 
 class TestElevenLabsTTSConfig:
-    """Test ElevenLabsTTSConfig"""
+    """Test ElevenLabsTTSConfig (dataclass wrapper)"""
     
     def test_default_values(self):
         """Test default configuration values"""
         config = ElevenLabsTTSConfig(api_key="test_key")
         
-        assert config.vendor == "elevenlabs"
         assert config.api_key == "test_key"
         assert config.model_id == "eleven_multilingual_v2"
         assert config.voice_id == "pNInz6obpgDQGcFmaJgB"
@@ -100,37 +122,70 @@ class TestElevenLabsTTSConfig:
         """Test custom configuration values"""
         config = ElevenLabsTTSConfig(
             api_key="test_key",
-            voice_id="custom_voice_id"
+            voice_id="custom_voice_id",
+            stability=0.5,
+            similarity_boost=0.8
         )
         
         assert config.voice_id == "custom_voice_id"
+        assert config.stability == 0.5
+        assert config.similarity_boost == 0.8
     
-    def test_to_dict(self):
-        """Test conversion to dictionary"""
+    def test_to_pydantic(self):
+        """Test conversion to Pydantic model"""
         config = ElevenLabsTTSConfig(api_key="test_key")
-        result = config.to_dict()
+        pydantic_model = config.to_pydantic()
         
-        assert isinstance(result, dict)
-        assert result["vendor"] == "elevenlabs"
-        assert result["api_key"] == "test_key"
+        assert pydantic_model.key == "test_key"
+        assert pydantic_model.model_id == "eleven_multilingual_v2"
+        assert pydantic_model.voice_id == "pNInz6obpgDQGcFmaJgB"
 
 
-class TestCustomConfigs:
-    """Test custom configuration classes"""
+class TestMicrosoftTTSConfig:
+    """Test MicrosoftTTSConfig (dataclass wrapper)"""
     
-    def test_custom_asr_config(self):
-        """Test creating custom ASR configuration"""
-        from dataclasses import dataclass
+    def test_creation(self):
+        """Test Microsoft TTS configuration"""
+        config = MicrosoftTTSConfig(key="test_key")
         
-        @dataclass
-        class CustomASRConfig(BaseASRConfig):
-            vendor: str = "custom_vendor"
-            api_key: str = ""
-            custom_param: str = "value"
+        assert config.key == "test_key"
+        assert config.region == "eastus"
+        assert config.voice_name == "en-US-JennyNeural"
+    
+    def test_to_pydantic(self):
+        """Test conversion to Pydantic model"""
+        config = MicrosoftTTSConfig(
+            key="test_key",
+            region="westus",
+            voice_name="zh-CN-XiaoxiaoNeural"
+        )
+        pydantic_model = config.to_pydantic()
         
-        config = CustomASRConfig(api_key="test_key", custom_param="custom_value")
-        result = config.to_dict()
+        assert pydantic_model.key == "test_key"
+        assert pydantic_model.region == "westus"
+        assert pydantic_model.voice_name == "zh-CN-XiaoxiaoNeural"
+
+
+class TestOpenAITTSConfig:
+    """Test OpenAITTSConfig (dataclass wrapper)"""
+    
+    def test_creation(self):
+        """Test OpenAI TTS configuration"""
+        config = OpenAITTSConfig(api_key="test_key")
         
-        assert result["vendor"] == "custom_vendor"
-        assert result["api_key"] == "test_key"
-        assert result["custom_param"] == "custom_value"
+        assert config.api_key == "test_key"
+        assert config.model == "tts-1"
+        assert config.voice == "alloy"
+    
+    def test_to_pydantic(self):
+        """Test conversion to Pydantic model"""
+        config = OpenAITTSConfig(
+            api_key="test_key",
+            model="tts-1-hd",
+            voice="nova"
+        )
+        pydantic_model = config.to_pydantic()
+        
+        assert pydantic_model.api_key == "test_key"
+        assert pydantic_model.model == "tts-1-hd"
+        assert pydantic_model.voice == "nova"
